@@ -1,0 +1,154 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7"></script>
+  </head>
+
+  <body>
+  <select id="storeID" name="storeID">
+    <option value="06778">62nd and Keystone(6778)</option>
+    <option value="03363">86th and Westfield Blvd(3363)</option>
+    <option value="15334">116th and Rangeline(15334)</option>
+  </select>
+  <br>
+  <button onclick="test(storeID.value)">Submit</button>
+  </body>
+
+  <script>
+  
+  var MyDate = new Date();
+var currentDate;
+
+MyDate.setDate(MyDate.getDate());
+let currentYear = MyDate.getFullYear()-2000;
+
+currentDate = ('0' + (MyDate.getMonth()+1)).slice(-2) + '/'
+             + ('0' + MyDate.getDate()).slice(-2) + '/'
+             + currentYear;
+             
+cleanDate = ('0' + (MyDate.getMonth()+1)).slice(-2)
+             + ('0' + MyDate.getDate()).slice(-2)
+             + currentYear;
+  
+    const invoiceNumber = '4595542' + cleanDate.toString();
+    const { degrees, PDFDocument, rgb, StandardFonts } = PDFLib
+
+    async function prepData(currentDate, storeID, invoiceNumber) {
+      
+      const SAP = '1000' + storeID
+      
+      let mileage
+      let cost
+      switch (storeID) {
+      	case '06778':
+        	mileage = '15.2';
+          cost = '$9.96'
+        	break;
+        case '03363':
+        	mileage = '10.6';
+          cost = '$6.94'
+          break;
+        case '15334':
+        	mileage = '4';
+          cost = '$2.62'
+          break;
+        }
+      modifyPdf(currentDate, SAP, invoiceNumber, storeID, mileage, cost)
+      }
+
+		async function modifyPdf(currentDate, SAP, invoiceNumber, storeID, mileage, cost){
+    
+    const url = 'https://averydvann.github.io/mileageCalc/expensereport.pdf'
+  		const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer())
+
+      // Load a PDFDocument from the existing PDF bytes
+      const pdfDoc = await PDFDocument.load(existingPdfBytes)
+
+      // Embed the Helvetica font
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica)
+
+      // Get the first page of the document
+      const pages = pdfDoc.getPages()
+      const firstPage = pages[0]
+
+      // Get the width and height of the first page
+      const { width, height } = firstPage.getSize()
+    
+			firstPage.drawText(currentDate, {
+        x: 75,
+        y: 538,
+        size: 12,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText(SAP, {
+        x: 160,
+        y: 478,
+        size: 12,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText(invoiceNumber, {
+        x: 90,
+        y: 515,
+        size: 12,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText('Assist ' + storeID, {
+        x: 30,
+        y: 326,
+        size: 8,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText(currentDate, {
+        x: 97,
+        y: 326,
+        size: 8,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText(currentDate, {
+        x: 340,
+        y: 120,
+        size: 8,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText(mileage, {
+        x: 135,
+        y: 326,
+        size: 8,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText(cost, {
+        x: 174,
+        y: 326,
+        size: 8,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      firstPage.drawText(cost, {
+        x: 200,
+        y: 160,
+        size: 14,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      })
+      // Serialize the PDFDocument to bytes (a Uint8Array)
+      const pdfBytes = await pdfDoc.save()
+
+			// Trigger the browser to download the PDF document
+      download(pdfBytes, invoiceNumber, "application/pdf");
+    }
+    function modify(){
+    	modifyPdf(currentDate);
+    }
+    function test(storeID){
+    prepData(currentDate, storeID, invoiceNumber)
+    }
+  </script>
+</html>
